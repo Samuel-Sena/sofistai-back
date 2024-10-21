@@ -1,5 +1,8 @@
 package com.sofistai.back.controller;
 
+import com.sofistai.back.dto.UserRequestDTO;
+import com.sofistai.back.dto.UserResponseDTO;
+import com.sofistai.back.mapper.UserMapper;
 import com.sofistai.back.model.User;
 import com.sofistai.back.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,21 +19,23 @@ public class UserController {
     private UserService userService;
 
     @PostMapping("/signup")
-    public ResponseEntity<?> registerUser(@RequestBody User user) {
+    public ResponseEntity<UserResponseDTO> registerUser(@RequestBody UserRequestDTO userRequestDTO) {
         try {
-            if (user.getFirstName() == null || user.getLastName() == null || user.getUsername() == null ||
-                    user.getEmail() == null || user.getPassword() == null) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Todos os campos são obrigatórios.");
+            if (userRequestDTO.getFirstName() == null || userRequestDTO.getLastName() == null ||
+                    userRequestDTO.getUsername() == null || userRequestDTO.getEmail() == null ||
+                    userRequestDTO.getPassword() == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
             }
 
-            if (userService.emailExists(user.getEmail())) {
-                return ResponseEntity.status(HttpStatus.CONFLICT).body("E-mail já está em uso.");
+            if (userService.emailExists(userRequestDTO.getEmail())) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(null);
             }
 
-            User savedUser = userService.saveUser(user);
-            return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
+            User savedUser = userService.saveUser(userRequestDTO);
+            UserResponseDTO response = UserMapper.userToUserResponseDTO(savedUser);
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao registrar o usuário.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
 }
